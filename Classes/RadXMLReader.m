@@ -58,7 +58,7 @@
     [result appendString:[self stringContents]];
     [result appendString:@"</"];
     [result appendString:name];
-    [result appendString:@">\n"];
+    [result appendString:@">"];
     return result;
 }
 
@@ -195,7 +195,7 @@
         
         if (node_isempty) {            
             id lastObject = [xmlStack lastObject];
-            NSLog(@"last object %@", lastObject);            
+            //NSLog(@"last object %@", lastObject);            
             [xmlStack removeLastObject];
             RadXMLNode *newLastObject = [xmlStack lastObject];
             [newLastObject.children addObject:lastObject];
@@ -208,11 +208,12 @@
 }
 
 - (id) readXMLFromString:(NSString *)string {
+    self.rootNode = nil;
     if (!string) 
         return nil;
     const char *buffer = [string cStringUsingEncoding:NSUTF8StringEncoding];
     int size = (int) strlen(buffer);    
-    xmlTextReaderPtr reader = xmlReaderForMemory(buffer, size, "", NULL, XML_PARSE_NOBLANKS|XML_PARSE_DTDVALID);
+    xmlTextReaderPtr reader = xmlReaderForMemory(buffer, size, "", NULL, XML_PARSE_NOBLANKS);
                                                  // XML_PARSE_DTDVALID
     // to read directly from a file, use this:    
     // xmlTextReaderPtr reader = xmlNewTextReaderFilename([filename UTF8String]);
