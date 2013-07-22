@@ -9,16 +9,17 @@
 #import <Foundation/Foundation.h>
 
 @interface RadXMLNode : NSObject 
-@property (nonatomic, retain) NSString *name;
-@property (nonatomic, retain) NSMutableArray *children;
-@property (nonatomic, retain) NSMutableDictionary *attributes;
+@property (nonatomic, strong) NSString *name;
+@property (nonatomic, strong) NSMutableArray *children;
+@property (nonatomic, strong) NSMutableDictionary *attributes;
 - (NSDictionary *) dictionaryRepresentationWithSchema:(NSDictionary *) schema;
 @end
 
 @interface RadXMLReader : NSObject {
     NSMutableArray *xmlStack;
 }
-@property (nonatomic, retain) RadXMLNode *rootNode;
-- (id) readXMLFromString:(NSString *) string;
+@property (nonatomic, strong) RadXMLNode *rootNode;
+@property (nonatomic, strong) NSError *error;
+- (id) readXMLFromString:(NSString *) string error:(NSError **) error;
 @end
 

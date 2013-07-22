@@ -52,7 +52,7 @@
     [result appendString:@"<"];
     [result appendString:name];
     for (id key in [self.attributes allKeys]) {
-        [result appendFormat:@" %@=\"%@\"", key, [self.attributes objectForKey:key]];    
+        [result appendFormat:@" %@=\"%@\"", key, [self.attributes objectForKey:key]];
     }
     [result appendString:@">"];
     [result appendString:[self stringContents]];
@@ -67,16 +67,12 @@
 }
 
 - (NSDictionary *) dictionaryRepresentationWithSchema:(NSDictionary *) schema {
-  
-    
     NSDictionary *arrayNames = [schema objectForKey:@"arrayNames"];
     NSArray *terminalNames = [schema objectForKey:@"terminalNames"];
     
-
-    
     NSMutableDictionary *result = [NSMutableDictionary dictionary];
     for (id key in [self.attributes allKeys]) {
-        [result setObject:[self.attributes objectForKey:key] forKey:key];    
+        [result setObject:[self.attributes objectForKey:key] forKey:key];
     }
     for (id child in children) {
         NSString *childName = [child name];
@@ -178,24 +174,24 @@
          XML_READER_TYPE_XML_DECLARATION = 17
          */
         
-        if (node_hasattributes) {         
+        if (node_hasattributes) {
             int more = xmlTextReaderMoveToNextAttribute(reader);
             while (more) {
                 int nodeType = xmlTextReaderNodeType(reader);
                 const char *name = (const char *) xmlTextReaderName(reader);
                 const char *value = (const char *) xmlTextReaderValue(reader);
                 // NSLog(@"attribute: %s=%s", name, value);
-                if (nodeType == XML_READER_TYPE_ATTRIBUTE) {                    
+                if (nodeType == XML_READER_TYPE_ATTRIBUTE) {
                     RadXMLNode *topObject = [xmlStack lastObject];
-                    [topObject.attributes setObject:[NSString stringWithCString:value encoding:NSUTF8StringEncoding] forKey:[NSString stringWithCString:name encoding:NSUTF8StringEncoding]];                    
-                }            
+                    [topObject.attributes setObject:[NSString stringWithCString:value encoding:NSUTF8StringEncoding] forKey:[NSString stringWithCString:name encoding:NSUTF8StringEncoding]];
+                }
                 more = xmlTextReaderMoveToNextAttribute(reader);
-            }            
+            }
         }
         
-        if (node_isempty) {            
+        if (node_isempty) {
             id lastObject = [xmlStack lastObject];
-            //NSLog(@"last object %@", lastObject);            
+            //NSLog(@"last object %@", lastObject);
             [xmlStack removeLastObject];
             RadXMLNode *newLastObject = [xmlStack lastObject];
             [newLastObject.children addObject:lastObject];
@@ -207,31 +203,73 @@
     }
 }
 
-- (id) readXMLFromString:(NSString *)string {
+static void radXMLTextReaderErrorFunc(void *arg,
+                                      const char *msg,
+                                      xmlParserSeverities severity,
+                                      xmlTextReaderLocatorPtr locator) {    
+    RadXMLReader *reader = (RadXMLReader *) arg;
+    [reader setError:[NSError errorWithDomain:@"RadXML"
+                                         code:1
+                                     userInfo:@{@"message":[NSString stringWithFormat:@"%s", msg]}]];
+    NSLog(@"ERROR! %s", msg);
+}
+
+
+
+- (id) readXMLFromString:(NSString *)string error:(NSError **)error {
     self.rootNode = nil;
-    if (!string) 
+    self.error = nil;
+    if (!string)
         return nil;
     const char *buffer = [string cStringUsingEncoding:NSUTF8StringEncoding];
-    int size = (int) strlen(buffer);    
+    int size = (int) strlen(buffer);
     xmlTextReaderPtr reader = xmlReaderForMemory(buffer, size, "", NULL, XML_PARSE_NOBLANKS);
-                                                 // XML_PARSE_DTDVALID
-    // to read directly from a file, use this:    
+    // XML_PARSE_DTDVALID
+    
+    xmlTextReaderSetErrorHandler(reader,
+                                 radXMLTextReaderErrorFunc,
+                                 (void *) self);
+    
+    
+    // to read directly from a file, use this:
     // xmlTextReaderPtr reader = xmlNewTextReaderFilename([filename UTF8String]);
     if (reader != NULL) {
         int ret = xmlTextReaderRead(reader);
         while (ret == 1) {
+            if (self.error) {
+                if (error) {
+                    *error = self.error;
+                }
+                self.rootNode = nil;
+                [xmlStack removeAllObjects];
+                return nil;
+            }
             [self processNode:reader];
             ret = xmlTextReaderRead(reader);
         }
         xmlFreeTextReader(reader);
         if (ret != 0) {
-            NSLog(@"failed to parse HTML");
+            // bail out
+            self.rootNode = nil;
+            [xmlStack removeAllObjects];
+            if (self.error) {
+                if (error) {
+                    *error = self.error;
+                }
+                self.rootNode = nil;
+                [xmlStack removeAllObjects];
+                return nil;
+            }
+            return nil;
         }
     } else {
         NSLog(@"Unable to open HTML");
-    }    
+        if (error) {
+            *error = [[NSError alloc] initWithDomain:@"RadXML" code:1 userInfo:nil];
+        }
+    }
     // the stack should be empty now
-    [xmlStack removeAllObjects];    
+    [xmlStack removeAllObjects];
     return self.rootNode;
 }
 

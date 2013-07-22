@@ -12,17 +12,22 @@
 int main (int argc, const char * argv[])
 {
     @autoreleasepool {   
-        chdir("/Users/tim/Desktop/Radtastica/SYBD/meta/data");
-        NSString *string = [NSString stringWithContentsOfFile:@"tips.xml" 
+        chdir("/Users/tim/Desktop");
+        NSString *string = [NSString stringWithContentsOfFile:@"propfind.xml" 
                                                      encoding:NSUTF8StringEncoding error:nil];
         
+        string = @"<foo>";
+        string = @"<D:propfind xmlns:D=\"DAV:\"><D:prop><bar:foo xmlns:bar=\"\"/></D:prop></D:propfind>";
+
         RadXMLReader *reader = [[RadXMLReader alloc] init];
-        RadXMLNode *stuff = [reader readXMLFromString:string];            
-        NSLog(@"%@", stuff);
+        NSError *error;
+        RadXMLNode *stuff = [reader readXMLFromString:string error:&error];
+        NSLog(@"result: %@", stuff);
         
+        /*
         NSDictionary *schema = [NSDictionary dictionaryWithObjectsAndKeys:
                                 [NSDictionary dictionaryWithObjectsAndKeys:                                
-                                 @"tips", @"tip", 
+                                 @"somenames", @"somename", 
                                  nil], 
                                 @"arrayNames",
                                 [NSArray arrayWithObjects:@"text", @"title", nil], 
@@ -30,7 +35,8 @@ int main (int argc, const char * argv[])
                                 nil];
                         
         
-        NSLog(@"%@", [stuff dictionaryRepresentationWithSchema:schema]);
+        NSLog(@"%@", [stuff dictionaryRepresentationWithSchema:nil]);
+         */
         [reader release];
     }
     return 0;
