@@ -15,14 +15,19 @@ int main (int argc, const char * argv[])
         chdir("/Users/tim/Desktop");
         NSString *string = [NSString stringWithContentsOfFile:@"propfind.xml" 
                                                      encoding:NSUTF8StringEncoding error:nil];
-        
         string = @"<foo>";
         string = @"<D:propfind xmlns:D=\"DAV:\"><D:prop><bar:foo xmlns:bar=\"\"/></D:prop></D:propfind>";
-
+        
+        string = [NSString stringWithContentsOfFile:@"/Users/tim/propset.xml"
+                                           encoding:NSUTF8StringEncoding
+                                              error:nil];
+        
         RadXMLReader *reader = [[RadXMLReader alloc] init];
         NSError *error;
-        RadXMLNode *stuff = [reader readXMLFromString:string error:&error];
-        NSLog(@"result: %@", stuff);
+        RadXMLNode *root = [reader readXMLFromString:string error:&error];
+        NSLog(@"result: %@", root);
+        
+        NSLog(@"ROOT: %@", [root name]);
         
         /*
         NSDictionary *schema = [NSDictionary dictionaryWithObjectsAndKeys:

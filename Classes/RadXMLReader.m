@@ -113,12 +113,19 @@
 
 - (void) processNode:(xmlTextReaderPtr) reader {
     
-    xmlChar *node_name = xmlTextReaderName(reader);
+    xmlChar *node_baseURI      =  xmlTextReaderBaseUri(reader);
+    xmlChar *node_localName    = xmlTextReaderLocalName(reader);
+    xmlChar *node_name         = xmlTextReaderName(reader);
+    xmlChar *node_namespaceURI = xmlTextReaderNamespaceUri(reader);
+    xmlChar *node_prefix       = xmlTextReaderPrefix(reader);
+    xmlChar *node_XMLLang      = xmlTextReaderXmlLang(reader);
+    xmlChar *node_value        = xmlTextReaderValue(reader);
+    
+    
     if (node_name == NULL)
         node_name = xmlStrdup(BAD_CAST "--");
-    xmlChar *node_value = xmlTextReaderValue(reader);
     
-    // int node_depth = xmlTextReaderDepth(reader);
+    int node_depth = xmlTextReaderDepth(reader);
     int node_type = xmlTextReaderNodeType(reader);
     int node_isempty = xmlTextReaderIsEmptyElement(reader);
     int node_hasattributes = xmlTextReaderHasAttributes(reader);
@@ -146,9 +153,24 @@
         return;
     }
     if (node_type == XML_READER_TYPE_ELEMENT) {
-        // NSLog(@"opening node %s", node_name);
+        // NSLog(@"opening node %s %s %s", node_localName, node_namespaceURI, node_prefix);    
+        
         RadXMLNode *node = [[[RadXMLNode alloc] init] autorelease];
-        node.name = [NSString stringWithCString:(const char *)node_name encoding:NSUTF8StringEncoding];
+        node.name = [NSString stringWithCString:(const char *)node_name
+                                       encoding:NSUTF8StringEncoding];
+        if (node_prefix) {
+            node.prefix = [NSString stringWithCString:(const char *)node_prefix
+                                             encoding:NSUTF8StringEncoding];
+        }
+        if (node_localName) {
+            node.localName = [NSString stringWithCString:(const char *)node_localName
+                                                encoding:NSUTF8StringEncoding];
+        }
+        if (node_namespaceURI) {
+            node.namespaceURI = [NSString stringWithCString:(const char *)node_namespaceURI
+                                                encoding:NSUTF8StringEncoding];
+        }
+        
         [xmlStack addObject:node];
         if (!rootNode) {
             self.rootNode = node;
@@ -206,7 +228,7 @@
 static void radXMLTextReaderErrorFunc(void *arg,
                                       const char *msg,
                                       xmlParserSeverities severity,
-                                      xmlTextReaderLocatorPtr locator) {    
+                                      xmlTextReaderLocatorPtr locator) {
     RadXMLReader *reader = (RadXMLReader *) arg;
     [reader setError:[NSError errorWithDomain:@"RadXML"
                                          code:1
