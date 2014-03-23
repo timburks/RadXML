@@ -16,6 +16,9 @@
 
 @property (nonatomic, strong) NSMutableArray *children;
 @property (nonatomic, strong) NSMutableDictionary *attributes;
+
+- (NSString *) universalName;
+
 - (NSDictionary *) dictionaryRepresentationWithSchema:(NSDictionary *) schema;
 @end
 

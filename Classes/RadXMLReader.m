@@ -39,6 +39,12 @@
     [super dealloc];
 }
 
+// http://www.jclark.com/xml/xmlns.htm
+- (NSString *) universalName
+{
+    return [NSString stringWithFormat:@"{%@}%@", self.namespaceURI, self.localName];
+}
+
 - (NSString *) stringContents {
     NSMutableString *result = [NSMutableString string];
     for (id child in children) {
